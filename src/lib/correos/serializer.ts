@@ -1,15 +1,21 @@
+import Papa from 'papaparse'
 import type { CorreosProfile, CorreosRecord } from './types'
 
 const sanitizeValue = (value: string): string => value.replace(/[\r\n]+/g, ' ').trim()
 
 export const serializeCorreosTxt = (records: CorreosRecord[], profile: CorreosProfile): string => {
-  const header = `#PROFILE${profile.fieldSeparator}${profile.code}${profile.fieldSeparator}${profile.name}`
+  const data = records.map((record) => profile.fields.map((field) => sanitizeValue(record.values[field.key] ?? '')))
+  const fields = profile.includeHeaderRow ? profile.fields.map((field) => field.header) : undefined
 
-  const lines = records.map((record) =>
-    profile.fields
-      .map((field) => sanitizeValue(record.values[field.key] ?? ''))
-      .join(profile.fieldSeparator),
-  )
+  const options = {
+    delimiter: profile.fieldSeparator,
+    newline: '\r\n',
+    quotes: false,
+  } as const
 
-  return [header, ...lines].join('\n')
+  if (fields) {
+    return Papa.unparse({ fields, data }, options)
+  }
+
+  return Papa.unparse(data, options)
 }

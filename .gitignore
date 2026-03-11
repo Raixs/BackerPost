@@ -14,6 +14,8 @@ dist-ssr
 
 # Local private CSV samples (never commit)
 EXAMPLE.csv
+PlantillaFicheroFormatoUnico.xls
+GuiadeAyuda*.pdf
 
 # Editor directories and files
 .vscode/*

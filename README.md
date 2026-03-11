@@ -20,6 +20,7 @@ Toda la UI está en español y todo el procesamiento ocurre en el navegador.
 - Exporta en modo estricto o asistido
 - Persiste sesión local en `localStorage`
 - Permite importar/exportar proyecto JSON
+- Genera `correos_s0410.txt` con la estructura oficial de Correos (Plantilla Fichero Formato Único)
 
 ## Stack
 

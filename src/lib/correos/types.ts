@@ -1,9 +1,17 @@
 import type { ExportableRow, ValidationIssue } from '../../types/domain'
 
+export interface CorreosFieldContext {
+  row: ExportableRow
+  rowPosition: 'C' | 'R' | 'F' | 'U'
+  rowNumber: number
+  totalRows: number
+}
+
 export interface CorreosFieldSpec {
   key: string
+  header: string
   maxLength?: number
-  getValue: (row: ExportableRow) => string
+  getValue: (context: CorreosFieldContext) => string
 }
 
 export interface CorreosProfile {
@@ -11,6 +19,7 @@ export interface CorreosProfile {
   name: string
   productCode: string
   fieldSeparator: string
+  includeHeaderRow: boolean
   fields: CorreosFieldSpec[]
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Badge, Button, Card, GhostButton, Input, Label } from '../../components/ui'
+import { Badge, Button, Card, GhostButton, Input, Label, Select } from '../../components/ui'
 import { ProgressChecklist } from '../../components/ProgressChecklist'
 import { filterRows } from '../validation/normalizeAndValidate'
 import { useBackerPostStore } from '../../store/useBackerPostStore'
@@ -25,6 +25,15 @@ const statusLabel = {
   warning: 'Avisos',
   error: 'Error',
 } as const
+
+const tipoEnvioOptions = [
+  { value: '1', label: '1 · Documentos' },
+  { value: '2', label: '2 · Venta de mercancías' },
+  { value: '3', label: '3 · Regalo' },
+  { value: '4', label: '4 · Muestra comercial' },
+  { value: '5', label: '5 · Mercancía devuelta' },
+  { value: '6', label: '6 · Otro' },
+]
 
 const summary = (rows: NormalizedShipmentRow[]) => {
   const valid = rows.filter((row) => row.status === 'valid').length
@@ -55,7 +64,7 @@ const getFirstBlockingField = (row: NormalizedShipmentRow): string => {
 
 const RowDrawer = ({ row, onClose }: { row: NormalizedShipmentRow; onClose: () => void }) => {
   const setRowOverride = useBackerPostStore((state) => state.setRowOverride)
-  const fieldRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const fieldRefs = useRef<Record<string, HTMLInputElement | HTMLSelectElement | null>>({})
 
   const [form, setForm] = useState<RowOverrides>({
     recipientName: row.recipientName,
@@ -75,7 +84,7 @@ const RowDrawer = ({ row, onClose }: { row: NormalizedShipmentRow; onClose: () =
     paisOrigenMercancia: row.paisOrigenMercancia,
   })
 
-  const setFieldRef = (field: string) => (node: HTMLInputElement | null) => {
+  const setFieldRef = (field: string) => (node: HTMLInputElement | HTMLSelectElement | null) => {
     fieldRefs.current[field] = node
   }
 
@@ -215,11 +224,18 @@ const RowDrawer = ({ row, onClose }: { row: NormalizedShipmentRow; onClose: () =
             </div>
             <div>
               <Label>Tipo envío</Label>
-              <Input
+              <Select
                 ref={setFieldRef('tipoEnvio')}
                 value={form.tipoEnvio ?? ''}
                 onChange={(event) => setForm((prev) => ({ ...prev, tipoEnvio: event.target.value }))}
-              />
+              >
+                <option value="">Selecciona un tipo</option>
+                {tipoEnvioOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
             </div>
             <div className="sm:col-span-2">
               <Label>Descripción contenido</Label>

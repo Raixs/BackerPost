@@ -42,7 +42,7 @@ export const defaultBatchConfig: BatchConfig = {
   productoCorreos: 'S0410',
   nombreProducto: 'PAQ STANDARD INTERNACIONAL',
   modalidadEntrega: 'domicilio',
-  tipoFranqueo: 'FRANQUEO_PAGADO',
+  tipoFranqueo: 'FP',
   tipoEnvio: '',
   descripcionContenido: '',
   pesoGramos: null,

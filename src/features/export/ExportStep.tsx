@@ -43,7 +43,8 @@ export const ExportStep = () => {
       <Card>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Exportar resultados</h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          Modo estricto bloquea el TXT si quedan errores. Modo asistido exporta solo filas válidas.
+          El TXT se genera con el formato oficial de Correos (Plantilla Fichero Formato Único, perfil S0410).
+          Modo estricto bloquea la exportación si quedan errores; modo asistido exporta solo filas válidas.
         </p>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-2">

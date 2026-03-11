@@ -7,6 +7,20 @@ import type { BatchConfig, ColumnMapping } from '../../types/domain'
 import { getMissingRequiredBatchFields, getMissingRequiredMappingTargets } from './progress'
 
 const mappingTargets = Object.keys(mappingLabels) as Array<keyof ColumnMapping>
+const franqueoOptions = [
+  { value: 'FP', label: 'FP · Franqueo pagado' },
+  { value: 'FM', label: 'FM · Franqueo máquina' },
+  { value: 'ON', label: 'ON · Pago online' },
+]
+
+const tipoEnvioOptions = [
+  { value: '1', label: '1 · Documentos' },
+  { value: '2', label: '2 · Venta de mercancías' },
+  { value: '3', label: '3 · Regalo' },
+  { value: '4', label: '4 · Muestra comercial' },
+  { value: '5', label: '5 · Mercancía devuelta' },
+  { value: '6', label: '6 · Otro' },
+]
 
 const batchFieldLabels: Record<'tipoEnvio' | 'descripcionContenido' | 'pesoGramos' | 'valorDeclarado' | 'cantidadArticulos' | 'paisOrigenMercancia', string> = {
   tipoEnvio: 'Tipo de envío',
@@ -101,19 +115,30 @@ export const MappingStep = () => {
           </div>
           <div>
             <Label>Tipo de franqueo</Label>
-            <Input
+            <Select
               value={batchConfig.tipoFranqueo}
               onChange={(event) => setBatchField('tipoFranqueo', event.target.value)}
-              placeholder="FRANQUEO_PAGADO"
-            />
+            >
+              {franqueoOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
           </div>
 
           <RequiredFieldBlock title={batchFieldLabels.tipoEnvio} missing={isMissingRequiredBatchField(missingBatch, 'tipoEnvio')}>
-            <Input
+            <Select
               value={batchConfig.tipoEnvio}
               onChange={(event) => setBatchField('tipoEnvio', event.target.value)}
-              placeholder="MERCANCIA"
-            />
+            >
+              <option value="">Selecciona un tipo</option>
+              {tipoEnvioOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
           </RequiredFieldBlock>
 
           <div className="sm:col-span-2">
