@@ -94,6 +94,26 @@ docker run --rm -it -u $(id -u):$(id -g) -v "$PWD":/app -w /app -p 4173:4173 nod
 - `npm run test`
 - `npm run test:watch`
 
+## GitHub Pages
+
+El proyecto ya incluye CI y despliegue automático en GitHub Pages:
+
+- CI: `.github/workflows/ci.yml`
+- Deploy Pages: `.github/workflows/deploy-pages.yml`
+
+### Qué adapta el código para Pages
+
+- `vite.config.ts` usa `VITE_BASE_PATH` (por defecto `/`).
+- En GitHub Actions se calcula automáticamente:
+  - repositorio tipo `usuario.github.io` -> `/`
+  - resto de repositorios -> `/<nombre-repo>/`
+
+### Activación
+
+1. Sube `main` a GitHub.
+2. En GitHub: `Settings -> Pages -> Build and deployment -> Source: GitHub Actions`.
+3. Haz push a `main` (o lanza `workflow_dispatch`) y se publicará en Pages.
+
 ## Limitaciones actuales del PoC
 
 - Exportador TXT modelado para un único perfil (`S0410`) con layout configurable en código.
