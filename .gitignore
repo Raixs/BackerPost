@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Local private CSV samples (never commit)
+EXAMPLE.csv
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
