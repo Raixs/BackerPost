@@ -1,11 +1,48 @@
+import type { ReactNode } from 'react'
 import { mappingLabels } from '../../app/constants'
 import { Button, Card, Input, Label, Select } from '../../components/ui'
 import { ProgressChecklist } from '../../components/ProgressChecklist'
 import { useBackerPostStore } from '../../store/useBackerPostStore'
-import type { ColumnMapping } from '../../types/domain'
+import type { BatchConfig, ColumnMapping } from '../../types/domain'
 import { getMissingRequiredBatchFields, getMissingRequiredMappingTargets } from './progress'
 
 const mappingTargets = Object.keys(mappingLabels) as Array<keyof ColumnMapping>
+
+const batchFieldLabels: Record<'tipoEnvio' | 'descripcionContenido' | 'pesoGramos' | 'valorDeclarado' | 'cantidadArticulos' | 'paisOrigenMercancia', string> = {
+  tipoEnvio: 'Tipo de envío',
+  descripcionContenido: 'Descripción de contenido',
+  pesoGramos: 'Peso por envío (gramos)',
+  valorDeclarado: 'Valor declarado por envío',
+  cantidadArticulos: 'Cantidad de artículos por envío',
+  paisOrigenMercancia: 'País de origen de mercancía',
+}
+
+const isMissingRequiredBatchField = (
+  missing: Array<keyof BatchConfig>,
+  field: keyof BatchConfig,
+): boolean => missing.includes(field)
+
+const RequiredFieldBlock = ({
+  title,
+  missing,
+  children,
+}: {
+  title: string
+  missing: boolean
+  children: ReactNode
+}) => (
+  <div
+    className={`rounded-xl border p-2 transition ${
+      missing
+        ? 'border-rose-300 bg-rose-50/70 dark:border-rose-800 dark:bg-rose-900/20'
+        : 'border-slate-200 bg-white/70 dark:border-slate-700 dark:bg-slate-950/30'
+    }`}
+  >
+    <Label className={missing ? 'text-rose-700 dark:text-rose-300' : ''}>{title} (requerido)</Label>
+    {missing && <p className="mb-1 text-xs font-medium text-rose-700 dark:text-rose-300">Pendiente de confirmar</p>}
+    {children}
+  </div>
+)
 
 export const MappingStep = () => {
   const dataset = useBackerPostStore((state) => state.dataset)
@@ -31,7 +68,138 @@ export const MappingStep = () => {
   return (
     <div className="space-y-4">
       <Card>
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Mapea las columnas del CSV para continuar</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Configuración del envío</h2>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          Primero define la configuración base del lote. Te marcamos lo obligatorio pendiente para que sea más fácil.
+        </p>
+
+        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-700 dark:bg-slate-900/40">
+          {missingBatch.length > 0 ? (
+            <>
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Campos obligatorios pendientes:</p>
+              <p className="mt-1 text-sm text-amber-700 dark:text-amber-200">
+                {missingBatch
+                  .map((field) => batchFieldLabels[field as keyof typeof batchFieldLabels] ?? field)
+                  .join(', ')}
+              </p>
+            </>
+          ) : (
+            <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+              Configuración obligatoria completa. Puedes continuar cuando acabes el mapeo.
+            </p>
+          )}
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div>
+            <Label>Producto Correos</Label>
+            <Input value={`${batchConfig.productoCorreos} · ${batchConfig.nombreProducto}`} readOnly />
+          </div>
+          <div>
+            <Label>Modalidad de entrega</Label>
+            <Input value={batchConfig.modalidadEntrega} readOnly />
+          </div>
+          <div>
+            <Label>Tipo de franqueo</Label>
+            <Input
+              value={batchConfig.tipoFranqueo}
+              onChange={(event) => setBatchField('tipoFranqueo', event.target.value)}
+              placeholder="FRANQUEO_PAGADO"
+            />
+          </div>
+
+          <RequiredFieldBlock title={batchFieldLabels.tipoEnvio} missing={isMissingRequiredBatchField(missingBatch, 'tipoEnvio')}>
+            <Input
+              value={batchConfig.tipoEnvio}
+              onChange={(event) => setBatchField('tipoEnvio', event.target.value)}
+              placeholder="MERCANCIA"
+            />
+          </RequiredFieldBlock>
+
+          <div className="sm:col-span-2">
+            <RequiredFieldBlock
+              title={batchFieldLabels.descripcionContenido}
+              missing={isMissingRequiredBatchField(missingBatch, 'descripcionContenido')}
+            >
+              <Input
+                value={batchConfig.descripcionContenido}
+                onChange={(event) => setBatchField('descripcionContenido', event.target.value)}
+                placeholder="Libro de tapa dura"
+              />
+            </RequiredFieldBlock>
+          </div>
+
+          <RequiredFieldBlock title={batchFieldLabels.pesoGramos} missing={isMissingRequiredBatchField(missingBatch, 'pesoGramos')}>
+            <Input
+              type="number"
+              min="0"
+              value={batchConfig.pesoGramos ?? ''}
+              onChange={(event) => setBatchField('pesoGramos', event.target.value === '' ? null : Number(event.target.value))}
+            />
+          </RequiredFieldBlock>
+
+          <RequiredFieldBlock
+            title={batchFieldLabels.valorDeclarado}
+            missing={isMissingRequiredBatchField(missingBatch, 'valorDeclarado')}
+          >
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={batchConfig.valorDeclarado ?? ''}
+              onChange={(event) =>
+                setBatchField('valorDeclarado', event.target.value === '' ? null : Number(event.target.value))
+              }
+            />
+          </RequiredFieldBlock>
+
+          <RequiredFieldBlock
+            title={batchFieldLabels.cantidadArticulos}
+            missing={isMissingRequiredBatchField(missingBatch, 'cantidadArticulos')}
+          >
+            <Input
+              type="number"
+              min="1"
+              value={batchConfig.cantidadArticulos ?? ''}
+              onChange={(event) =>
+                setBatchField('cantidadArticulos', event.target.value === '' ? null : Number(event.target.value))
+              }
+            />
+          </RequiredFieldBlock>
+
+          <RequiredFieldBlock
+            title={batchFieldLabels.paisOrigenMercancia}
+            missing={isMissingRequiredBatchField(missingBatch, 'paisOrigenMercancia')}
+          >
+            <Input
+              value={batchConfig.paisOrigenMercancia}
+              onChange={(event) => setBatchField('paisOrigenMercancia', event.target.value.toUpperCase())}
+              placeholder="ES"
+            />
+          </RequiredFieldBlock>
+        </div>
+
+        <ProgressChecklist
+          title="Checklist de configuración"
+          className="mt-3"
+          items={[
+            {
+              id: 'batch-required',
+              label: 'Configuración base del lote completa',
+              done: missingBatch.length === 0,
+              hint:
+                missingBatch.length > 0
+                  ? `Faltan: ${missingBatch
+                      .map((field) => batchFieldLabels[field as keyof typeof batchFieldLabels] ?? field)
+                      .join(', ')}.`
+                  : undefined,
+            },
+          ]}
+        />
+      </Card>
+
+      <Card>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Mapea las columnas del CSV para continuar</h3>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           BackerPost intentó sugerir columnas automáticamente. Puedes revisar y ajustar.
         </p>
@@ -71,119 +239,12 @@ export const MappingStep = () => {
             },
           ]}
         />
-      </Card>
-
-      <Card>
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Configuración del envío</h3>
-
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div>
-            <Label>Producto Correos</Label>
-            <Input value={`${batchConfig.productoCorreos} · ${batchConfig.nombreProducto}`} readOnly />
-          </div>
-          <div>
-            <Label>Modalidad de entrega</Label>
-            <Input value={batchConfig.modalidadEntrega} readOnly />
-          </div>
-          <div>
-            <Label>Tipo de franqueo</Label>
-            <Input
-              value={batchConfig.tipoFranqueo}
-              onChange={(event) => setBatchField('tipoFranqueo', event.target.value)}
-              placeholder="FRANQUEO_PAGADO"
-            />
-          </div>
-          <div>
-            <Label>Tipo de envío (requerido)</Label>
-            <Input
-              value={batchConfig.tipoEnvio}
-              onChange={(event) => setBatchField('tipoEnvio', event.target.value)}
-              placeholder="MERCANCIA"
-            />
-          </div>
-          <div>
-            <Label>Descripción de contenido (requerido)</Label>
-            <Input
-              value={batchConfig.descripcionContenido}
-              onChange={(event) => setBatchField('descripcionContenido', event.target.value)}
-              placeholder="Libro"
-            />
-          </div>
-          <div>
-            <Label>Peso por envío en gramos (requerido)</Label>
-            <Input
-              type="number"
-              min="0"
-              value={batchConfig.pesoGramos ?? ''}
-              onChange={(event) =>
-                setBatchField('pesoGramos', event.target.value === '' ? null : Number(event.target.value))
-              }
-            />
-          </div>
-          <div>
-            <Label>Valor declarado por envío (requerido)</Label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              value={batchConfig.valorDeclarado ?? ''}
-              onChange={(event) =>
-                setBatchField('valorDeclarado', event.target.value === '' ? null : Number(event.target.value))
-              }
-            />
-          </div>
-          <div>
-            <Label>Cantidad de artículos por envío (requerido)</Label>
-            <Input
-              type="number"
-              min="1"
-              value={batchConfig.cantidadArticulos ?? ''}
-              onChange={(event) =>
-                setBatchField('cantidadArticulos', event.target.value === '' ? null : Number(event.target.value))
-              }
-            />
-          </div>
-          <div>
-            <Label>País de origen de mercancía (requerido)</Label>
-            <Input
-              value={batchConfig.paisOrigenMercancia}
-              onChange={(event) => setBatchField('paisOrigenMercancia', event.target.value.toUpperCase())}
-              placeholder="ES"
-            />
-          </div>
-        </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
           <Button type="button" disabled={!mappingReady || !batchReady} onClick={() => setCurrentStep(3)}>
             Guardar y revisar filas
           </Button>
         </div>
-
-        <ProgressChecklist
-          title="Checklist de configuración"
-          className="mt-3"
-          items={[
-            {
-              id: 'batch-required',
-              label: 'Configuración base del lote completa',
-              done: missingBatch.length === 0,
-              hint:
-                missingBatch.length > 0
-                  ? `Faltan: ${missingBatch
-                      .map((field) => {
-                        if (field === 'tipoEnvio') return 'tipo de envío'
-                        if (field === 'descripcionContenido') return 'descripción de contenido'
-                        if (field === 'pesoGramos') return 'peso por envío'
-                        if (field === 'valorDeclarado') return 'valor declarado'
-                        if (field === 'cantidadArticulos') return 'cantidad de artículos'
-                        if (field === 'paisOrigenMercancia') return 'país de origen de mercancía'
-                        return field
-                      })
-                      .join(', ')}.`
-                  : undefined,
-            },
-          ]}
-        />
 
         {!mappingReady && (
           <p className="mt-3 text-sm text-amber-700 dark:text-amber-300">Completa el mapeo mínimo para continuar.</p>
